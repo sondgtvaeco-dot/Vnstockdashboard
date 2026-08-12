@@ -21,8 +21,14 @@ jobs:
       - name: Cài đặt thư viện
         run: pip install -r requirements.txt
 
-      - name: Chạy collector (ghi kết quả vào Postgres)
+      - name: Chạy collector cổ phiếu (ghi kết quả vào Postgres)
         env:
           VNSTOCK_API_KEY: ${{ secrets.VNSTOCK_API_KEY }}
           DB_URL: ${{ secrets.DB_URL }}
         run: python main.py
+
+      - name: Chạy collector phái sinh VN30F (ghi kết quả vào Postgres)
+        env:
+          VNSTOCK_API_KEY: ${{ secrets.VNSTOCK_API_KEY }}
+          DB_URL: ${{ secrets.DB_URL }}
+        run: python main_futures.py
