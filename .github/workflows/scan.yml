@@ -1,0 +1,28 @@
+name: VN Stock Scan
+
+on:
+  schedule:
+    # Mỗi 30 phút, 02:00-08:00 UTC = 09:00-15:00 giờ VN, Thứ 2 - Thứ 6
+    # Lưu ý: đây là polling định kỳ, không phải luồng dữ liệu tức thời, và
+    # GitHub Actions free tier không đảm bảo chạy đúng giờ tuyệt đối.
+    - cron: "*/30 2-8 * * 1-5"
+  workflow_dispatch: {}  # cho phép bấm chạy tay từ tab Actions trên GitHub
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cài đặt thư viện
+        run: pip install -r requirements.txt
+
+      - name: Chạy collector (ghi kết quả vào Postgres)
+        env:
+          VNSTOCK_API_KEY: ${{ secrets.VNSTOCK_API_KEY }}
+          DB_URL: ${{ secrets.DB_URL }}
+        run: python main.py
