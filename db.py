@@ -246,6 +246,16 @@ def get_score_history(symbol: str) -> pd.DataFrame:
     return pd.read_sql(text(query), get_engine(), params={"symbol": symbol})
 
 
+def get_score_trend(symbol: str, limit: int = 20) -> list:
+    """N giá trị combined_score gần nhất (cũ->mới) - dùng vẽ sparkline xu hướng."""
+    query = """
+        SELECT combined_score FROM scores_history
+        WHERE symbol = :symbol ORDER BY run_time DESC LIMIT :limit
+    """
+    df = pd.read_sql(text(query), get_engine(), params={"symbol": symbol, "limit": limit})
+    return df["combined_score"].iloc[::-1].tolist()
+
+
 # ───────────────────────────────── Nhật ký giao dịch ─────────────────────────────────
 
 def add_trade(symbol: str, action: str, trade_date: str, price: float, quantity: float,
@@ -359,3 +369,13 @@ def get_latest_futures_scores() -> pd.DataFrame:
 def get_futures_score_history(symbol: str) -> pd.DataFrame:
     query = "SELECT * FROM futures_scores_history WHERE symbol = :symbol ORDER BY run_time ASC"
     return pd.read_sql(text(query), get_engine(), params={"symbol": symbol})
+
+
+def get_futures_score_trend(symbol: str, limit: int = 20) -> list:
+    """N giá trị combined_score gần nhất (cũ->mới) cho phái sinh - dùng vẽ sparkline."""
+    query = """
+        SELECT combined_score FROM futures_scores_history
+        WHERE symbol = :symbol ORDER BY run_time DESC LIMIT :limit
+    """
+    df = pd.read_sql(text(query), get_engine(), params={"symbol": symbol, "limit": limit})
+    return df["combined_score"].iloc[::-1].tolist()

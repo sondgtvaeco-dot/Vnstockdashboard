@@ -51,16 +51,27 @@ else:
     df_display = df.copy()
     df_display.insert(0, "trạng thái", df_display["zone"].map(ZONE_ICON).fillna("⚪"))
     df_display["run_time"] = df_display["run_time"].astype(str)
+    df_display["tín hiệu"] = df_display.apply(
+        lambda row: indicator_explain.build_signal(row, cfg)["label"], axis=1
+    )
+    df_display["xu hướng gần đây"] = df_display["symbol"].apply(
+        lambda s: db.get_futures_score_trend(s, limit=20)
+    )
 
-    cols = ["trạng thái", "symbol", "combined_score", "zone", "technical_score",
-            "basis_score", "last_close", "basis", "basis_pct", "rsi", "mfi", "run_time"]
+    cols = ["trạng thái", "symbol", "tín hiệu", "xu hướng gần đây", "combined_score", "zone",
+            "technical_score", "basis_score", "last_close", "basis", "basis_pct", "rsi", "mfi", "run_time"]
     st.dataframe(
         df_display[cols].rename(columns={
-            "symbol": "Hợp đồng", "combined_score": "Điểm tổng hợp", "zone": "Vùng giá",
+            "symbol": "Hợp đồng", "tín hiệu": "Tín hiệu", "combined_score": "Điểm tổng hợp", "zone": "Vùng giá",
             "technical_score": "Điểm kỹ thuật", "basis_score": "Điểm basis",
             "last_close": "Giá", "basis": "Basis", "basis_pct": "Basis (%)",
             "rsi": "RSI", "mfi": "MFI", "run_time": "Lần quét gần nhất (UTC)",
         }),
+        column_config={
+            "xu hướng gần đây": st.column_config.LineChartColumn(
+                "Xu hướng gần đây", y_min=0, y_max=100, width="small",
+            ),
+        },
         width="stretch",
         hide_index=True,
     )
