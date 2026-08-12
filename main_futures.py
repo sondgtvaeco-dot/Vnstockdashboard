@@ -65,8 +65,12 @@ def analyze_futures_live(fetcher: VNDataFetcher, symbol: str, weights: dict, thr
         try:
             daily_fut_df = fetcher.get_futures_ohlcv(symbol, lookback_days=cfg.LOOKBACK_DAYS, interval="1D")
             last_row["sma_200"] = indicators.daily_trend_sma(daily_fut_df, period=200)
-        except Exception:  # noqa: BLE001
+            if last_row["sma_200"] is None:
+                print(f"  [{symbol}] SMA200 = None: chỉ có {len(daily_fut_df)} phiên nến ngày "
+                      f"(cần >=200) - bình thường với hợp đồng phái sinh mới đáo hạn ngắn hạn.")
+        except Exception as e:  # noqa: BLE001
             last_row["sma_200"] = None
+            print(f"  [{symbol}] Lỗi khi lấy nến ngày cho SMA200: {e}")
     tech_score = indicators.technical_score(last_row, cfg)
 
     basis_summary = futures_analysis.build_basis_summary(symbol, fut_df, idx_df)
