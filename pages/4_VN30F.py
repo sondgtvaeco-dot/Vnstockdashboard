@@ -7,6 +7,8 @@ import pandas as pd
 import streamlit as st
 
 import db
+import indicator_explain
+import config as cfg
 from auth import require_login
 
 st.set_page_config(page_title="VN30F - Phái sinh", layout="wide")
@@ -51,13 +53,13 @@ else:
     df_display["run_time"] = df_display["run_time"].astype(str)
 
     cols = ["trạng thái", "symbol", "combined_score", "zone", "technical_score",
-            "basis_score", "last_close", "basis", "basis_pct", "rsi", "run_time"]
+            "basis_score", "last_close", "basis", "basis_pct", "rsi", "mfi", "run_time"]
     st.dataframe(
         df_display[cols].rename(columns={
             "symbol": "Hợp đồng", "combined_score": "Điểm tổng hợp", "zone": "Vùng giá",
             "technical_score": "Điểm kỹ thuật", "basis_score": "Điểm basis",
             "last_close": "Giá", "basis": "Basis", "basis_pct": "Basis (%)",
-            "rsi": "RSI", "run_time": "Lần quét gần nhất (UTC)",
+            "rsi": "RSI", "mfi": "MFI", "run_time": "Lần quét gần nhất (UTC)",
         }),
         width="stretch",
         hide_index=True,
@@ -78,12 +80,28 @@ else:
     hist["run_time"] = pd.to_datetime(hist["run_time"])
     hist = hist.sort_values("run_time")
 
+    latest = hist.iloc[-1]
+    st.markdown("**Chi tiết chỉ báo (lượt quét gần nhất)**")
+    indicator_rows = indicator_explain.build_indicator_table(latest, cfg)
+    if indicator_rows:
+        st.dataframe(indicator_rows, width="stretch", hide_index=True)
+    else:
+        st.info("Chưa có dữ liệu chỉ báo chi tiết cho lượt quét này.")
+
     st.markdown("**Lịch sử điểm số**")
     st.line_chart(hist.set_index("run_time")[["technical_score", "basis_score", "combined_score"]])
 
     st.markdown("**Giá & Basis**")
     st.line_chart(hist.set_index("run_time")[["last_close"]])
     st.line_chart(hist.set_index("run_time")[["basis_pct"]])
+
+    if hist["macd_hist"].notna().any():
+        st.markdown("**MACD Histogram theo thời gian**")
+        st.bar_chart(hist.set_index("run_time")[["macd_hist"]])
+
+    if hist["mfi"].notna().any():
+        st.markdown("**MFI (dòng tiền) theo thời gian**")
+        st.line_chart(hist.set_index("run_time")[["mfi"]])
 
     st.markdown("**Dữ liệu chi tiết**")
     st.dataframe(hist.sort_values("run_time", ascending=False), width="stretch", hide_index=True)

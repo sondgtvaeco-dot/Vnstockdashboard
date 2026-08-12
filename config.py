@@ -55,6 +55,12 @@ BOLLINGER_STD = 2
 
 SUPPORT_RESISTANCE_WINDOW = 20
 
+# Chỉ báo dòng tiền
+MFI_PERIOD = 14
+MFI_OVERSOLD = 20
+MFI_OVERBOUGHT = 80
+OBV_WINDOW = 20  # số phiên để xác định xu hướng OBV (so với đường trung bình của chính nó)
+
 TECHNICAL_WEIGHT = 0.5
 VALUATION_WEIGHT = 0.5
 

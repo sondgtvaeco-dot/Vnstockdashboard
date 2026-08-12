@@ -91,12 +91,48 @@ SCHEMA_STATEMENTS = [
     "CREATE INDEX IF NOT EXISTS idx_futures_scores_symbol_time ON futures_scores_history(symbol, run_time)",
 ]
 
+# Các cột chi tiết chỉ báo được thêm SAU khi bảng đã tồn tại ở một số môi trường
+# (bạn đã chạy hệ thống trước khi có tính năng này) - dùng ALTER TABLE ... ADD
+# COLUMN IF NOT EXISTS để bổ sung an toàn, không ảnh hưởng dữ liệu cũ đã có.
+MIGRATION_STATEMENTS = [
+    """
+    ALTER TABLE scores_history
+        ADD COLUMN IF NOT EXISTS macd DOUBLE PRECISION,
+        ADD COLUMN IF NOT EXISTS macd_signal DOUBLE PRECISION,
+        ADD COLUMN IF NOT EXISTS macd_hist DOUBLE PRECISION,
+        ADD COLUMN IF NOT EXISTS bb_percent_b DOUBLE PRECISION,
+        ADD COLUMN IF NOT EXISTS support DOUBLE PRECISION,
+        ADD COLUMN IF NOT EXISTS resistance DOUBLE PRECISION,
+        ADD COLUMN IF NOT EXISTS sma_20 DOUBLE PRECISION,
+        ADD COLUMN IF NOT EXISTS sma_50 DOUBLE PRECISION,
+        ADD COLUMN IF NOT EXISTS sma_200 DOUBLE PRECISION,
+        ADD COLUMN IF NOT EXISTS mfi DOUBLE PRECISION,
+        ADD COLUMN IF NOT EXISTS obv_trend TEXT
+    """,
+    """
+    ALTER TABLE futures_scores_history
+        ADD COLUMN IF NOT EXISTS macd DOUBLE PRECISION,
+        ADD COLUMN IF NOT EXISTS macd_signal DOUBLE PRECISION,
+        ADD COLUMN IF NOT EXISTS macd_hist DOUBLE PRECISION,
+        ADD COLUMN IF NOT EXISTS bb_percent_b DOUBLE PRECISION,
+        ADD COLUMN IF NOT EXISTS support DOUBLE PRECISION,
+        ADD COLUMN IF NOT EXISTS resistance DOUBLE PRECISION,
+        ADD COLUMN IF NOT EXISTS sma_20 DOUBLE PRECISION,
+        ADD COLUMN IF NOT EXISTS sma_50 DOUBLE PRECISION,
+        ADD COLUMN IF NOT EXISTS sma_200 DOUBLE PRECISION,
+        ADD COLUMN IF NOT EXISTS mfi DOUBLE PRECISION,
+        ADD COLUMN IF NOT EXISTS obv_trend TEXT
+    """,
+]
+
 
 def init_db() -> None:
-    """Tạo bảng nếu chưa tồn tại. Gọi an toàn nhiều lần (idempotent)."""
+    """Tạo bảng nếu chưa tồn tại, và bổ sung cột mới nếu bảng đã có từ trước. Gọi an toàn nhiều lần (idempotent)."""
     engine = get_engine()
     with engine.begin() as conn:
         for stmt in SCHEMA_STATEMENTS:
+            conn.execute(text(stmt))
+        for stmt in MIGRATION_STATEMENTS:
             conn.execute(text(stmt))
 
 
@@ -160,9 +196,13 @@ def insert_scores(rows: list, run_time: datetime = None) -> None:
             conn.execute(text("""
                 INSERT INTO scores_history
                 (run_time, symbol, technical_score, valuation_score, combined_score,
-                 zone, last_close, rsi, current_pe, current_pb, note)
+                 zone, last_close, rsi, current_pe, current_pb, note,
+                 macd, macd_signal, macd_hist, bb_percent_b, support, resistance,
+                 sma_20, sma_50, sma_200, mfi, obv_trend)
                 VALUES (:run_time, :symbol, :technical_score, :valuation_score, :combined_score,
-                        :zone, :last_close, :rsi, :current_pe, :current_pb, :note)
+                        :zone, :last_close, :rsi, :current_pe, :current_pb, :note,
+                        :macd, :macd_signal, :macd_hist, :bb_percent_b, :support, :resistance,
+                        :sma_20, :sma_50, :sma_200, :mfi, :obv_trend)
             """), {
                 "run_time": run_time,
                 "symbol": r.get("symbol"),
@@ -175,6 +215,17 @@ def insert_scores(rows: list, run_time: datetime = None) -> None:
                 "current_pe": r.get("current_pe"),
                 "current_pb": r.get("current_pb"),
                 "note": r.get("note"),
+                "macd": r.get("macd"),
+                "macd_signal": r.get("macd_signal"),
+                "macd_hist": r.get("macd_hist"),
+                "bb_percent_b": r.get("bb_percent_b"),
+                "support": r.get("support"),
+                "resistance": r.get("resistance"),
+                "sma_20": r.get("sma_20"),
+                "sma_50": r.get("sma_50"),
+                "sma_200": r.get("sma_200"),
+                "mfi": r.get("mfi"),
+                "obv_trend": r.get("obv_trend"),
             })
 
 
@@ -261,9 +312,13 @@ def insert_futures_scores(rows: list, run_time: datetime = None) -> None:
             conn.execute(text("""
                 INSERT INTO futures_scores_history
                 (run_time, symbol, technical_score, basis_score, combined_score,
-                 zone, last_close, rsi, basis, basis_pct, note)
+                 zone, last_close, rsi, basis, basis_pct, note,
+                 macd, macd_signal, macd_hist, bb_percent_b, support, resistance,
+                 sma_20, sma_50, sma_200, mfi, obv_trend)
                 VALUES (:run_time, :symbol, :technical_score, :basis_score, :combined_score,
-                        :zone, :last_close, :rsi, :basis, :basis_pct, :note)
+                        :zone, :last_close, :rsi, :basis, :basis_pct, :note,
+                        :macd, :macd_signal, :macd_hist, :bb_percent_b, :support, :resistance,
+                        :sma_20, :sma_50, :sma_200, :mfi, :obv_trend)
             """), {
                 "run_time": run_time,
                 "symbol": r.get("symbol"),
@@ -276,6 +331,17 @@ def insert_futures_scores(rows: list, run_time: datetime = None) -> None:
                 "basis": r.get("basis"),
                 "basis_pct": r.get("basis_pct"),
                 "note": r.get("note"),
+                "macd": r.get("macd"),
+                "macd_signal": r.get("macd_signal"),
+                "macd_hist": r.get("macd_hist"),
+                "bb_percent_b": r.get("bb_percent_b"),
+                "support": r.get("support"),
+                "resistance": r.get("resistance"),
+                "sma_20": r.get("sma_20"),
+                "sma_50": r.get("sma_50"),
+                "sma_200": r.get("sma_200"),
+                "mfi": r.get("mfi"),
+                "obv_trend": r.get("obv_trend"),
             })
 
 

@@ -43,6 +43,7 @@ def analyze_symbol_demo(symbol: str, weights: dict, thresholds: dict) -> dict:
     result["current_pe"] = None
     result["current_pb"] = None
     result["note"] = "DEMO: dữ liệu giả lập, chỉ dùng kiểm thử logic."
+    result.update(indicators.extract_indicator_detail(last_row, cfg))
     return result
 
 
@@ -71,6 +72,7 @@ def analyze_symbol_live(fetcher: VNDataFetcher, symbol: str, weights: dict, thre
     result["current_pe"] = current_pe
     result["current_pb"] = current_pb
     result["note"] = note
+    result.update(indicators.extract_indicator_detail(last_row, cfg))
     return result
 
 

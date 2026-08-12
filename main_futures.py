@@ -41,6 +41,7 @@ def analyze_futures_demo(symbol: str, weights: dict, thresholds: dict) -> dict:
     result["basis"] = basis_summary["basis"]
     result["basis_pct"] = basis_summary["basis_pct"]
     result["note"] = "DEMO: dữ liệu giả lập, chỉ dùng kiểm thử logic."
+    result.update(indicators.extract_indicator_detail(last_row, cfg))
     return result
 
 
@@ -63,6 +64,7 @@ def analyze_futures_live(fetcher: VNDataFetcher, symbol: str, weights: dict, thr
     result["basis"] = basis_summary["basis"]
     result["basis_pct"] = basis_summary["basis_pct"]
     result["note"] = basis_summary["note"]
+    result.update(indicators.extract_indicator_detail(last_row, cfg))
     return result
 
 

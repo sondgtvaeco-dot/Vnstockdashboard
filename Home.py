@@ -41,12 +41,12 @@ else:
 
     display_cols = ["trạng thái", "symbol", "combined_score", "zone",
                      "technical_score", "valuation_score", "last_close",
-                     "rsi", "current_pe", "current_pb", "run_time"]
+                     "rsi", "mfi", "current_pe", "current_pb", "run_time"]
     st.dataframe(
         df[display_cols].rename(columns={
             "symbol": "Mã", "combined_score": "Điểm tổng hợp", "zone": "Vùng giá",
             "technical_score": "Điểm kỹ thuật", "valuation_score": "Điểm định giá",
-            "last_close": "Giá đóng cửa", "rsi": "RSI", "current_pe": "P/E",
+            "last_close": "Giá đóng cửa", "rsi": "RSI", "mfi": "MFI", "current_pe": "P/E",
             "current_pb": "P/B", "run_time": "Lần quét gần nhất (UTC)",
         }),
         width='stretch',

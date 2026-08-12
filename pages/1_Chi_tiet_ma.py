@@ -7,6 +7,8 @@ import pandas as pd
 import streamlit as st
 
 import db
+import indicator_explain
+import config as cfg
 from auth import require_login
 
 st.set_page_config(page_title="Chi tiết mã", layout="wide")
@@ -37,11 +39,26 @@ col2.metric("Vùng giá", latest["zone"])
 col3.metric("Giá đóng cửa", f"{latest['last_close']:.2f}" if pd.notna(latest["last_close"]) else "—")
 col4.metric("RSI", f"{latest['rsi']:.1f}" if pd.notna(latest["rsi"]) else "—")
 
+st.subheader("Chi tiết chỉ báo (lượt quét gần nhất)")
+indicator_rows = indicator_explain.build_indicator_table(latest, cfg)
+if indicator_rows:
+    st.dataframe(indicator_rows, width="stretch", hide_index=True)
+else:
+    st.info("Chưa có dữ liệu chỉ báo chi tiết cho lượt quét này (có thể do quét trước khi tính năng này được thêm).")
+
 st.subheader("Lịch sử điểm số")
 st.line_chart(hist.set_index("run_time")[["technical_score", "valuation_score", "combined_score"]])
 
 st.subheader("Giá đóng cửa")
 st.line_chart(hist.set_index("run_time")[["last_close"]])
+
+if hist["macd_hist"].notna().any():
+    st.subheader("MACD Histogram theo thời gian")
+    st.bar_chart(hist.set_index("run_time")[["macd_hist"]])
+
+if hist["mfi"].notna().any():
+    st.subheader("MFI (dòng tiền) theo thời gian")
+    st.line_chart(hist.set_index("run_time")[["mfi"]])
 
 if hist["current_pe"].notna().any() or hist["current_pb"].notna().any():
     st.subheader("P/E, P/B theo thời gian")

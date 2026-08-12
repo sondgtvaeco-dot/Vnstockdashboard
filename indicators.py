@@ -77,6 +77,38 @@ def stochastic(df: pd.DataFrame, k_period: int = 14, d_period: int = 3) -> pd.Da
     return pd.DataFrame({"stoch_k": percent_k, "stoch_d": percent_d})
 
 
+def money_flow_index(df: pd.DataFrame, period: int = 14) -> pd.Series:
+    """
+    Money Flow Index (MFI) - giống RSI nhưng có tính đến khối lượng giao dịch,
+    nên còn được gọi là "RSI có trọng số dòng tiền". Thang 0-100, đọc giống RSI:
+    dưới ~20 = dòng tiền bán quá mức (quá bán), trên ~80 = dòng tiền mua quá mức (quá mua).
+    """
+    typical_price = (df["high"] + df["low"] + df["close"]) / 3
+    money_flow = typical_price * df["volume"]
+    price_diff = typical_price.diff()
+
+    positive_flow = money_flow.where(price_diff > 0, 0.0)
+    negative_flow = money_flow.where(price_diff < 0, 0.0)
+
+    positive_sum = positive_flow.rolling(window=period, min_periods=period).sum()
+    negative_sum = negative_flow.rolling(window=period, min_periods=period).sum()
+
+    money_ratio = positive_sum / negative_sum.replace(0, np.nan)
+    mfi = 100 - (100 / (1 + money_ratio))
+    mfi = mfi.where(negative_sum != 0, 100)
+    return mfi
+
+
+def on_balance_volume(df: pd.DataFrame) -> pd.Series:
+    """
+    On Balance Volume (OBV) - cộng dồn khối lượng theo chiều tăng/giảm của giá.
+    Giá trị tuyệt đối không có ý nghĩa - chỉ nên nhìn XU HƯỚNG của đường này
+    (đang tăng hay giảm) để xác nhận/nghi ngờ xu hướng giá.
+    """
+    direction = np.sign(df["close"].diff()).fillna(0)
+    return (direction * df["volume"]).cumsum()
+
+
 def support_resistance(df: pd.DataFrame, window: int = 20) -> pd.DataFrame:
     """
     Vùng hỗ trợ/kháng cự đơn giản dựa trên đáy/đỉnh cục bộ trong `window` phiên gần nhất.
@@ -110,6 +142,10 @@ def compute_all_indicators(df: pd.DataFrame, cfg) -> pd.DataFrame:
     out["sma_20"] = sma(out["close"], 20)
     out["sma_50"] = sma(out["close"], 50)
     out["sma_200"] = sma(out["close"], 200)
+
+    out["mfi"] = money_flow_index(out, cfg.MFI_PERIOD)
+    out["obv"] = on_balance_volume(out)
+    out["obv_sma"] = sma(out["obv"], cfg.OBV_WINDOW)
 
     return out
 
@@ -156,4 +192,44 @@ def technical_score(row: pd.Series, cfg) -> float:
     if pd.notna(row.get("sma_200")) and pd.notna(row.get("close")):
         score += 5 if row["close"] >= row["sma_200"] else -5
 
+    # MFI: giống RSI nhưng có trọng số dòng tiền - đọc theo cùng logic
+    if pd.notna(row.get("mfi")):
+        if row["mfi"] <= cfg.MFI_OVERSOLD:
+            score += 10
+        elif row["mfi"] >= cfg.MFI_OVERBOUGHT:
+            score -= 10
+
     return float(np.clip(score, 0, 100))
+
+
+def extract_indicator_detail(row: pd.Series, cfg) -> dict:
+    """
+    Trích xuất các giá trị chỉ báo thô (không gộp điểm) từ một dòng dữ liệu đã
+    tính đầy đủ (compute_all_indicators) - dùng để lưu vào DB và hiển thị chi
+    tiết trên dashboard, thay vì chỉ có technical_score đã gộp.
+    """
+    def _r(val, digits=2):
+        return round(float(val), digits) if pd.notna(val) else None
+
+    obv_trend = "Chưa đủ dữ liệu"
+    if pd.notna(row.get("obv")) and pd.notna(row.get("obv_sma")):
+        if row["obv"] > row["obv_sma"]:
+            obv_trend = "Dòng tiền vào (tăng)"
+        elif row["obv"] < row["obv_sma"]:
+            obv_trend = "Dòng tiền ra (giảm)"
+        else:
+            obv_trend = "Đi ngang"
+
+    return {
+        "macd": _r(row.get("macd"), 3),
+        "macd_signal": _r(row.get("macd_signal"), 3),
+        "macd_hist": _r(row.get("macd_hist"), 3),
+        "bb_percent_b": _r(row.get("bb_percent_b"), 3),
+        "support": _r(row.get("support")),
+        "resistance": _r(row.get("resistance")),
+        "sma_20": _r(row.get("sma_20")),
+        "sma_50": _r(row.get("sma_50")),
+        "sma_200": _r(row.get("sma_200")),
+        "mfi": _r(row.get("mfi"), 1),
+        "obv_trend": obv_trend,
+    }
