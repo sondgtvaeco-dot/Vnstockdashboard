@@ -87,6 +87,87 @@ def build_signal(row: pd.Series, cfg) -> dict:
     return {"label": base_label, "confidence": confidence, "reasons": reasons}
 
 
+def build_trend_following_signal(hist: pd.DataFrame, cfg) -> dict:
+    """
+    Tín hiệu theo trường phái "theo xu hướng dòng tiền mạnh" (trend-following) -
+    NGƯỢC với build_signal() ở trên (vốn theo logic mean-reversion: mua khi quá bán).
+
+    Trường phái này: MUA khi dòng tiền ĐÃ xác nhận xu hướng tăng (không chờ giá
+    giảm về mới mua), BÁN khi dòng tiền BẮT ĐẦU đảo chiều (không đợi "quá mua"
+    mới bán) - đi theo xu hướng thay vì bắt đáy/đỉnh.
+
+    hist: DataFrame lịch sử điểm số của 1 mã, đã sort theo run_time TĂNG DẦN,
+    cần tối thiểu 2 dòng để so sánh xu hướng giữa 2 lượt quét gần nhất.
+    """
+    if len(hist) < 2:
+        return {
+            "label": "GIỮ / CHỜ",
+            "confidence": "Chưa đủ lịch sử để so sánh xu hướng (cần ít nhất 2 lượt quét)",
+            "reasons": [],
+        }
+
+    latest = hist.iloc[-1]
+    prev = hist.iloc[-2]
+    bull, bear = [], []
+
+    # 1. Xác nhận / phân kỳ giữa giá và OBV - yếu tố quan trọng nhất của trường phái này
+    has_price = pd.notna(latest.get("last_close")) and pd.notna(prev.get("last_close"))
+    price_up = has_price and latest["last_close"] > prev["last_close"]
+    price_down = has_price and latest["last_close"] < prev["last_close"]
+    obv_in = latest.get("obv_trend") == "Dòng tiền vào (tăng)"
+    obv_out = latest.get("obv_trend") == "Dòng tiền ra (giảm)"
+
+    if price_up and obv_in:
+        bull.append("Giá tăng + OBV xác nhận dòng tiền vào (xu hướng thật)")
+    elif price_up and obv_out:
+        bear.append("Giá tăng nhưng OBV cho thấy dòng tiền ra - phân kỳ cảnh báo")
+    elif price_down and obv_out:
+        bear.append("Giá giảm + OBV xác nhận dòng tiền ra (xu hướng giảm thật)")
+    elif price_down and obv_in:
+        bull.append("Giá giảm nhưng OBV cho thấy dòng tiền vào - có thể đang tích luỹ")
+
+    # 2. MFI theo HƯỚNG (không phải theo ngưỡng quá mua/quá bán như mean-reversion)
+    if pd.notna(latest.get("mfi")) and pd.notna(prev.get("mfi")):
+        if latest["mfi"] > 50 and latest["mfi"] > prev["mfi"]:
+            bull.append(f"MFI trên 50 và đang tăng ({prev['mfi']:.0f}→{latest['mfi']:.0f}) - dòng tiền mua mạnh dần")
+        elif latest["mfi"] < 50 and latest["mfi"] < prev["mfi"]:
+            bear.append(f"MFI dưới 50 và đang giảm ({prev['mfi']:.0f}→{latest['mfi']:.0f}) - dòng tiền bán mạnh dần")
+        elif prev["mfi"] >= 70 and latest["mfi"] < prev["mfi"]:
+            bear.append(f"MFI đang giảm từ vùng cao ({prev['mfi']:.0f}→{latest['mfi']:.0f}) - dòng tiền bắt đầu rút")
+
+    # 3. MACD Histogram - đà đang mạnh dần hay yếu đi (không phải cắt lên/xuống đơn thuần)
+    if pd.notna(latest.get("macd_hist")) and pd.notna(prev.get("macd_hist")):
+        if latest["macd_hist"] > 0 and latest["macd_hist"] > prev["macd_hist"]:
+            bull.append("MACD Histogram dương và đang giãn ra - đà tăng mạnh dần")
+        elif latest["macd_hist"] < 0 and latest["macd_hist"] < prev["macd_hist"]:
+            bear.append("MACD Histogram âm và đang giãn ra - đà giảm mạnh dần")
+        elif prev["macd_hist"] > 0 and latest["macd_hist"] < prev["macd_hist"]:
+            bear.append("MACD Histogram đang co lại từ dương - đà tăng suy yếu")
+
+    # 4. Breakout kháng cự / thủng hỗ trợ
+    if pd.notna(latest.get("resistance")) and pd.notna(latest.get("last_close")):
+        if latest["last_close"] >= latest["resistance"]:
+            bull.append("Giá đã vượt vùng kháng cự gần nhất")
+    if pd.notna(latest.get("support")) and pd.notna(latest.get("last_close")):
+        if latest["last_close"] <= latest["support"]:
+            bear.append("Giá đã thủng vùng hỗ trợ gần nhất")
+
+    if len(bull) > len(bear):
+        label = "MUA (theo xu hướng)"
+        confidence = "Đồng thuận cao" if len(bull) >= 2 else "Đồng thuận trung bình"
+        reasons = bull
+    elif len(bear) > len(bull):
+        label = "BÁN (theo xu hướng)"
+        confidence = "Đồng thuận cao" if len(bear) >= 2 else "Đồng thuận trung bình"
+        reasons = bear
+    else:
+        label = "GIỮ / CHỜ"
+        confidence = f"{len(bull)} tín hiệu nghiêng tăng, {len(bear)} nghiêng giảm - chưa đủ rõ ràng"
+        reasons = bull + bear
+
+    return {"label": label, "confidence": confidence, "reasons": reasons}
+
+
 def build_indicator_table(row: pd.Series, cfg) -> list:
     """
     row: một dòng dữ liệu lấy từ scores_history/futures_scores_history (đã có

@@ -170,6 +170,24 @@ liệu cũ) — nhưng các lượt quét *trước* thời điểm nâng cấp 
 chỉ báo chi tiết (hiển thị "—"), chỉ các lượt quét *sau khi* nâng cấp mới có
 đầy đủ.
 
+### Hai trường phái tín hiệu song song
+
+Trang **Chi tiết mã** và **VN30F** hiển thị **2 khối tín hiệu cạnh nhau**,
+theo 2 trường phái giao dịch khác nhau trên cùng 1 bộ dữ liệu:
+
+| | Mean-Reversion (khối trái) | Trend-Following (khối phải) |
+|---|---|---|
+| Logic | Mua khi quá bán, bán khi quá mua - kỳ vọng giá đảo chiều về trung bình | Mua khi dòng tiền đã xác nhận xu hướng, bán khi dòng tiền bắt đầu đảo chiều |
+| MFI cao | Tín hiệu xấu (quá mua) | Có thể là tín hiệu tốt nếu đang tăng (dòng tiền mạnh) |
+| Yếu tố chính | RSI, MFI theo ngưỡng, MACD cắt lên/xuống | OBV xác nhận/phân kỳ với giá, MFI theo hướng, MACD Histogram giãn/co, breakout |
+| Cần dữ liệu | 1 lượt quét | Tối thiểu 2 lượt quét (so sánh xu hướng) |
+
+**2 khối có thể ra tín hiệu khác nhau, thậm chí ngược nhau trên cùng 1 mã** -
+đây là điều bình thường vì bản chất 2 triết lý khác nhau, không phải lỗi hệ
+thống. Chọn trường phái phù hợp với phong cách giao dịch của bạn (mean-reversion
+phù hợp giao dịch dao động trong biên độ; trend-following phù hợp bắt xu hướng
+mạnh, chấp nhận vào trễ hơn để đổi lấy xác suất đúng cao hơn).
+
 ## Cấu trúc project
 
 | File/thư mục | Chức năng |

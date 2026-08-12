@@ -82,19 +82,38 @@ else:
 
     latest = hist.iloc[-1]
 
-    signal = indicator_explain.build_signal(latest, cfg)
-    signal_text = f"**{signal['label']}** — {signal['confidence']}"
-    if signal["reasons"]:
-        signal_text += "\n\nLý do: " + ", ".join(signal["reasons"])
-    if signal["label"] == "MUA":
-        st.success(signal_text)
-    elif signal["label"].startswith("BÁN"):
-        st.error(signal_text)
-    else:
-        st.warning(signal_text)
+    sig_col1, sig_col2 = st.columns(2)
+
+    with sig_col1:
+        st.markdown("**Tín hiệu Mean-Reversion** _(mua khi quá bán, bán khi quá mua)_")
+        signal = indicator_explain.build_signal(latest, cfg)
+        signal_text = f"**{signal['label']}** — {signal['confidence']}"
+        if signal["reasons"]:
+            signal_text += "\n\nLý do: " + ", ".join(signal["reasons"])
+        if signal["label"] == "MUA":
+            st.success(signal_text)
+        elif signal["label"].startswith("BÁN"):
+            st.error(signal_text)
+        else:
+            st.warning(signal_text)
+
+    with sig_col2:
+        st.markdown("**Tín hiệu Trend-Following** _(theo xu hướng dòng tiền mạnh)_")
+        tf_signal = indicator_explain.build_trend_following_signal(hist, cfg)
+        tf_text = f"**{tf_signal['label']}** — {tf_signal['confidence']}"
+        if tf_signal["reasons"]:
+            tf_text += "\n\nLý do: " + ", ".join(tf_signal["reasons"])
+        if tf_signal["label"].startswith("MUA"):
+            st.success(tf_text)
+        elif tf_signal["label"].startswith("BÁN"):
+            st.error(tf_text)
+        else:
+            st.warning(tf_text)
+
     st.caption(
-        "Tín hiệu tổng hợp từ vùng giá + mức độ đồng thuận giữa các chỉ báo riêng lẻ bên dưới. "
-        "Không phải khuyến nghị đầu tư - luôn tự kiểm tra thêm trước khi ra quyết định."
+        "2 trường phái có thể cho tín hiệu KHÁC NHAU hoặc thậm chí NGƯỢC NHAU trên cùng dữ liệu - "
+        "đây là điều bình thường, không phải lỗi. Chọn trường phái phù hợp với phong cách giao dịch "
+        "của bạn, không phải khuyến nghị đầu tư."
     )
 
     st.markdown("**Chi tiết chỉ báo (lượt quét gần nhất)**")
