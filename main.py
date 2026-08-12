@@ -49,7 +49,9 @@ def analyze_symbol_demo(symbol: str, weights: dict, thresholds: dict) -> dict:
 
 def analyze_symbol_live(fetcher: VNDataFetcher, symbol: str, weights: dict, thresholds: dict) -> dict:
     """Chạy pipeline với dữ liệu thật từ vnstock."""
-    df = fetcher.get_equity_ohlcv(symbol, lookback_days=cfg.LOOKBACK_DAYS)
+    df = fetcher.get_equity_ohlcv(
+        symbol, lookback_days=cfg.EQUITY_INTRADAY_LOOKBACK_DAYS, interval=cfg.EQUITY_INTERVAL,
+    )
     df_ind = indicators.compute_all_indicators(df, cfg)
     last_row = df_ind.iloc[-1]
     tech_score = indicators.technical_score(last_row, cfg)

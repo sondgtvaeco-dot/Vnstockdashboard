@@ -2,11 +2,18 @@ name: VN Stock Scan
 
 on:
   schedule:
-    # Mỗi 30 phút, 02:00-08:00 UTC = 09:00-15:00 giờ VN, Thứ 2 - Thứ 6
-    # Lưu ý: đây là polling định kỳ, không phải luồng dữ liệu tức thời, và
-    # GitHub Actions free tier không đảm bảo chạy đúng giờ tuyệt đối.
-    - cron: "*/30 2-8 * * 1-5"
+    # Mỗi 5 phút, 02:00-08:00 UTC = 09:00-15:00 giờ VN, Thứ 2 - Thứ 6
+    # Lưu ý: GitHub Actions free tier không đảm bảo chạy đúng giờ tuyệt đối
+    # (có thể trễ vài phút so với lịch cron, đặc biệt vào giờ cao điểm).
+    - cron: "*/5 2-8 * * 1-5"
   workflow_dispatch: {}  # cho phép bấm chạy tay từ tab Actions trên GitHub
+
+# Nếu 1 lượt quét chưa chạy xong mà đã tới giờ chạy tiếp theo (vd watchlist
+# lớn + khung phút khiến quét lâu hơn 5 phút), CHỜ lượt cũ xong rồi mới chạy
+# lượt mới - không cho 2 lượt ghi đè dữ liệu chồng chéo nhau cùng lúc.
+concurrency:
+  group: vn-stock-scan
+  cancel-in-progress: false
 
 jobs:
   scan:

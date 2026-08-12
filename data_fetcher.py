@@ -40,22 +40,28 @@ class VNDataFetcher:
         start = end - timedelta(days=lookback_days)
         return start.isoformat(), end.isoformat()
 
-    def get_equity_ohlcv(self, symbol: str, lookback_days: int = 500) -> pd.DataFrame:
-        """Giá lịch sử OHLCV của một mã cổ phiếu."""
+    def get_equity_ohlcv(self, symbol: str, lookback_days: int = 500, interval: str = "1D") -> pd.DataFrame:
+        """
+        Giá lịch sử OHLCV của một mã cổ phiếu.
+        interval: '1D' (ngày, mặc định) hoặc khung phút '1m'/'5m'/'15m'/'1H' -
+        LƯU Ý: khung phút thường chỉ khả dụng với tài khoản vnstock Premium/Pro.
+        """
         start, end = self._date_range(lookback_days)
-        df = self.market.equity(symbol).ohlcv(start=start, end=end)
+        df = self.market.equity(symbol).ohlcv(start=start, end=end, interval=interval)
         return self._standardize_ohlcv(df)
 
-    def get_index_ohlcv(self, index_symbol: str = "VNINDEX", lookback_days: int = 500) -> pd.DataFrame:
-        """Giá lịch sử chỉ số (VNINDEX, HNXINDEX...)."""
+    def get_index_ohlcv(self, index_symbol: str = "VNINDEX", lookback_days: int = 500,
+                         interval: str = "1D") -> pd.DataFrame:
+        """Giá lịch sử chỉ số (VNINDEX, VN30...). Xem ghi chú interval ở get_equity_ohlcv."""
         start, end = self._date_range(lookback_days)
-        df = self.market.index(index_symbol).ohlcv(start=start, end=end)
+        df = self.market.index(index_symbol).ohlcv(start=start, end=end, interval=interval)
         return self._standardize_ohlcv(df)
 
-    def get_futures_ohlcv(self, futures_symbol: str = "VN30F1M", lookback_days: int = 500) -> pd.DataFrame:
-        """Giá lịch sử hợp đồng tương lai chỉ số VN30 (VN30F1M/VN30F2M...)."""
+    def get_futures_ohlcv(self, futures_symbol: str = "VN30F1M", lookback_days: int = 500,
+                           interval: str = "1D") -> pd.DataFrame:
+        """Giá lịch sử hợp đồng tương lai chỉ số VN30. Xem ghi chú interval ở get_equity_ohlcv."""
         start, end = self._date_range(lookback_days)
-        df = self.market.futures(futures_symbol).ohlcv(start=start, end=end)
+        df = self.market.futures(futures_symbol).ohlcv(start=start, end=end, interval=interval)
         return self._standardize_ohlcv(df)
 
     def get_ratios(self, symbol: str, period: str = "year") -> pd.DataFrame:

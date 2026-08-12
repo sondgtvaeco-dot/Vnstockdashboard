@@ -40,6 +40,17 @@ FUTURES_ZONE_CHEAP_THRESHOLD = 65
 FUTURES_ZONE_EXPENSIVE_THRESHOLD = 35
 
 LOOKBACK_DAYS = 500
+
+# ── Khung nến (interval) ──
+# '1D' = nến ngày (mặc định an toàn, ai cũng dùng được).
+# Khung phút ('15m', '5m', '1m', '1H') THƯỜNG CHỈ KHẢ DỤNG VỚI TÀI KHOẢN
+# VNSTOCK PREMIUM/PRO - hãy test với 1-2 mã trước khi đổi cả watchlist.
+EQUITY_INTERVAL = "15m"
+EQUITY_INTRADAY_LOOKBACK_DAYS = 30   # ~30 ngày x ~26 nến/phiên (15 phút) = đủ cho SMA200
+
+FUTURES_INTERVAL = "5m"
+FUTURES_INTRADAY_LOOKBACK_DAYS = 15  # ~15 ngày x ~75 nến/phiên (5 phút) = đủ cho SMA200
+
 RATIO_PERIOD = "year"
 
 RSI_PERIOD = 14

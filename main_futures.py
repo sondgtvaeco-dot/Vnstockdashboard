@@ -46,8 +46,13 @@ def analyze_futures_demo(symbol: str, weights: dict, thresholds: dict) -> dict:
 
 
 def analyze_futures_live(fetcher: VNDataFetcher, symbol: str, weights: dict, thresholds: dict) -> dict:
-    fut_df = fetcher.get_futures_ohlcv(symbol, lookback_days=cfg.LOOKBACK_DAYS)
-    idx_df = fetcher.get_index_ohlcv(cfg.FUTURES_UNDERLYING_INDEX, lookback_days=cfg.LOOKBACK_DAYS)
+    fut_df = fetcher.get_futures_ohlcv(
+        symbol, lookback_days=cfg.FUTURES_INTRADAY_LOOKBACK_DAYS, interval=cfg.FUTURES_INTERVAL,
+    )
+    idx_df = fetcher.get_index_ohlcv(
+        cfg.FUTURES_UNDERLYING_INDEX, lookback_days=cfg.FUTURES_INTRADAY_LOOKBACK_DAYS,
+        interval=cfg.FUTURES_INTERVAL,
+    )
 
     df_ind = indicators.compute_all_indicators(fut_df, cfg)
     last_row = df_ind.iloc[-1]
