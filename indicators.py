@@ -202,6 +202,21 @@ def technical_score(row: pd.Series, cfg) -> float:
     return float(np.clip(score, 0, 100))
 
 
+def daily_trend_sma(daily_df: pd.DataFrame, period: int = 200) -> float | None:
+    """
+    Tính SMA(period) từ dữ liệu NẾN NGÀY riêng - dùng làm bộ lọc xu hướng dài
+    hạn khi chỉ báo chính đang chạy trên khung phút (intraday). "200 kỳ" trên
+    nến phút chỉ tương đương vài ngày, không còn ý nghĩa "dài hạn" như trên
+    nến ngày - nên phải tính từ 1 nguồn dữ liệu ngày tách riêng.
+    Trả về None nếu chưa đủ `period` phiên dữ liệu (vd hợp đồng phái sinh mới
+    niêm yết, cổ phiếu mới lên sàn).
+    """
+    if daily_df is None or len(daily_df) < period:
+        return None
+    value = sma(daily_df["close"], period).iloc[-1]
+    return float(value) if pd.notna(value) else None
+
+
 def extract_indicator_detail(row: pd.Series, cfg) -> dict:
     """
     Trích xuất các giá trị chỉ báo thô (không gộp điểm) từ một dòng dữ liệu đã

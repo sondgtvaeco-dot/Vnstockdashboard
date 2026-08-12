@@ -53,7 +53,16 @@ def analyze_symbol_live(fetcher: VNDataFetcher, symbol: str, weights: dict, thre
         symbol, lookback_days=cfg.EQUITY_INTRADAY_LOOKBACK_DAYS, interval=cfg.EQUITY_INTERVAL,
     )
     df_ind = indicators.compute_all_indicators(df, cfg)
-    last_row = df_ind.iloc[-1]
+    last_row = df_ind.iloc[-1].copy()
+
+    # SMA200 "dài hạn" không có ý nghĩa nếu tính trên khung phút (200 kỳ x 15 phút
+    # chỉ ~2 ngày) - lấy riêng từ nến NGÀY rồi ghi đè vào trước khi chấm điểm.
+    if cfg.EQUITY_INTERVAL != "1D":
+        try:
+            daily_df = fetcher.get_equity_ohlcv(symbol, lookback_days=cfg.LOOKBACK_DAYS, interval="1D")
+            last_row["sma_200"] = indicators.daily_trend_sma(daily_df, period=200)
+        except Exception:  # noqa: BLE001
+            last_row["sma_200"] = None
     tech_score = indicators.technical_score(last_row, cfg)
 
     try:
