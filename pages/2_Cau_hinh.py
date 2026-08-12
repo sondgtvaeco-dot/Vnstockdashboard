@@ -18,7 +18,36 @@ st.caption("Thay đổi ở đây sẽ áp dụng ở lượt quét tiếp theo 
 tab_equity, tab_futures = st.tabs(["Cổ phiếu", "Phái sinh (VN30F)"])
 
 with tab_equity:
-    st.subheader("Danh sách mã theo dõi")
+    st.subheader("Thêm nhanh 1 mã")
+    col_add1, col_add2 = st.columns([3, 1])
+    new_equity_symbol = col_add1.text_input(
+        "Nhập mã muốn thêm (vd: MWG)", key="equity_quick_add", label_visibility="collapsed",
+        placeholder="Nhập mã muốn thêm (vd: MWG)",
+    )
+    if col_add2.button("Thêm mã", key="equity_quick_add_btn", type="primary"):
+        symbol_to_add = new_equity_symbol.strip().upper()
+        current = db.get_watchlist()
+        if not symbol_to_add:
+            st.error("Nhập mã trước khi bấm Thêm.")
+        elif symbol_to_add in current:
+            st.warning(f"{symbol_to_add} đã có trong watchlist.")
+        else:
+            db.set_watchlist(current + [symbol_to_add])
+            st.success(f"Đã thêm {symbol_to_add}.")
+            st.rerun()
+
+    current_watchlist = db.get_watchlist()
+    if current_watchlist:
+        to_remove_equity = st.multiselect(
+            "Xoá mã khỏi watchlist (chọn rồi bấm Xoá)", current_watchlist, key="equity_remove_select",
+        )
+        if st.button("Xoá các mã đã chọn", key="equity_remove_btn") and to_remove_equity:
+            db.set_watchlist([s for s in current_watchlist if s not in to_remove_equity])
+            st.success(f"Đã xoá: {', '.join(to_remove_equity)}")
+            st.rerun()
+
+    st.divider()
+    st.subheader("Danh sách mã theo dõi (chỉnh hàng loạt)")
     current_watchlist = db.get_watchlist()
     watchlist_text = st.text_area(
         "Mỗi mã cách nhau bằng dấu phẩy hoặc xuống dòng",
@@ -63,7 +92,36 @@ with tab_equity:
                 st.success(f"Đã lưu. Watchlist hiện có {len(symbols)} mã: {', '.join(symbols)}")
 
 with tab_futures:
-    st.subheader("Danh sách hợp đồng theo dõi")
+    st.subheader("Thêm nhanh 1 hợp đồng")
+    col_fadd1, col_fadd2 = st.columns([3, 1])
+    new_futures_symbol = col_fadd1.text_input(
+        "Nhập mã hợp đồng (vd: VN30F2M)", key="futures_quick_add", label_visibility="collapsed",
+        placeholder="Nhập mã hợp đồng (vd: VN30F2M)",
+    )
+    if col_fadd2.button("Thêm mã", key="futures_quick_add_btn", type="primary"):
+        fsymbol_to_add = new_futures_symbol.strip().upper()
+        current_f = db.get_futures_watchlist()
+        if not fsymbol_to_add:
+            st.error("Nhập mã trước khi bấm Thêm.")
+        elif fsymbol_to_add in current_f:
+            st.warning(f"{fsymbol_to_add} đã có trong watchlist.")
+        else:
+            db.set_futures_watchlist(current_f + [fsymbol_to_add])
+            st.success(f"Đã thêm {fsymbol_to_add}.")
+            st.rerun()
+
+    current_futures = db.get_futures_watchlist()
+    if current_futures:
+        to_remove_futures = st.multiselect(
+            "Xoá hợp đồng khỏi watchlist (chọn rồi bấm Xoá)", current_futures, key="futures_remove_select",
+        )
+        if st.button("Xoá các mã đã chọn", key="futures_remove_btn") and to_remove_futures:
+            db.set_futures_watchlist([s for s in current_futures if s not in to_remove_futures])
+            st.success(f"Đã xoá: {', '.join(to_remove_futures)}")
+            st.rerun()
+
+    st.divider()
+    st.subheader("Danh sách hợp đồng theo dõi (chỉnh hàng loạt)")
     st.caption(
         "Mã hợp đồng VN30F đổi theo tháng đáo hạn (VN30F1M = kỳ hạn gần nhất). "
         "Kiểm tra mã hợp đồng hiện hành trước khi thêm."

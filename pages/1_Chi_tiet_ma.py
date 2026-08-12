@@ -39,6 +39,21 @@ col2.metric("Vùng giá", latest["zone"])
 col3.metric("Giá đóng cửa", f"{latest['last_close']:.2f}" if pd.notna(latest["last_close"]) else "—")
 col4.metric("RSI", f"{latest['rsi']:.1f}" if pd.notna(latest["rsi"]) else "—")
 
+signal = indicator_explain.build_signal(latest, cfg)
+signal_text = f"**{signal['label']}** — {signal['confidence']}"
+if signal["reasons"]:
+    signal_text += "\n\nLý do: " + ", ".join(signal["reasons"])
+if signal["label"] == "MUA":
+    st.success(signal_text)
+elif signal["label"].startswith("BÁN"):
+    st.error(signal_text)
+else:
+    st.warning(signal_text)
+st.caption(
+    "Tín hiệu tổng hợp từ vùng giá + mức độ đồng thuận giữa các chỉ báo riêng lẻ bên dưới. "
+    "Không phải khuyến nghị đầu tư - luôn tự kiểm tra thêm trước khi ra quyết định."
+)
+
 st.subheader("Chi tiết chỉ báo (lượt quét gần nhất)")
 indicator_rows = indicator_explain.build_indicator_table(latest, cfg)
 if indicator_rows:

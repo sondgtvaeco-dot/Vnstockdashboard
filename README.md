@@ -114,8 +114,8 @@ cụ cá nhân, không phải hệ thống nhiều người dùng với phân qu
 | Trang | Chức năng |
 |---|---|
 | **Tổng quan** (`Home.py`) | Bảng tất cả mã theo dõi, đèn màu theo vùng giá (🟢 tốt / 🟡 trung lập / 🔴 đắt), sort theo điểm tổng hợp |
-| **Chi tiết mã** | Chọn 1 mã, xem biểu đồ lịch sử điểm kỹ thuật/định giá/tổng hợp, giá đóng cửa, P/E-P/B theo thời gian |
-| **Cấu hình** | Sửa watchlist, ngưỡng phân vùng, trọng số kỹ thuật/định giá — lưu vào Postgres, áp dụng từ lượt quét tiếp theo, không cần sửa code |
+| **Chi tiết mã** | Chọn 1 mã, xem **tín hiệu MUA/BÁN/GIỮ kèm mức độ đồng thuận + lý do cụ thể**, bảng chi tiết từng chỉ báo, biểu đồ lịch sử điểm số/giá/MACD/MFI |
+| **Cấu hình** | Ô **thêm/xoá nhanh 1 mã**, cộng với khung chỉnh hàng loạt watchlist/ngưỡng/trọng số kỹ thuật/định giá — lưu vào Postgres, áp dụng từ lượt quét tiếp theo, không cần sửa code |
 | **Nhật ký** | Ghi lại quyết định mua/bán thật (mã, giá, khối lượng, ghi chú) kèm điểm số hệ thống tại thời điểm đó, để tự đối chiếu hiệu quả tín hiệu về sau |
 
 ## Cách đọc điểm số
@@ -132,6 +132,21 @@ sách cần nghiên cứu kỹ hơn — không phải tín hiệu mua/bán tự 
 tra thêm tin tức/thanh khoản/câu chuyện doanh nghiệp, và đặt stop-loss khi
 vào lệnh thật. Dùng trang Nhật ký để tự theo dõi xem tín hiệu này có thực sự
 đáng tin theo thời gian hay không, trước khi tin tưởng hoàn toàn vào nó.
+
+### Tín hiệu MUA/BÁN/GIỮ tổng hợp
+
+Ngay đầu trang **Chi tiết mã** (và **VN30F**) có khối tín hiệu tổng hợp,
+trả lời thẳng câu hỏi "mua/bán khi nào":
+
+- **Nhãn gốc** lấy từ `zone`: `Vùng giá tốt` → **MUA**, `Vùng giá đắt` →
+  **BÁN/CHỐT LỜI**, `Trung lập` → **GIỮ/CHỜ**.
+- **Mức độ đồng thuận**: hệ thống đếm xem bao nhiêu chỉ báo riêng lẻ (RSI,
+  MFI, MACD, Bollinger %B, OBV, vị trí so với hỗ trợ/kháng cự) đang cùng
+  hướng với nhãn gốc. Nhiều chỉ báo đồng thuận → "Đồng thuận cao" (tín hiệu
+  đáng tin hơn); các chỉ báo mâu thuẫn nhau → cảnh báo "nên chờ xác nhận
+  thêm" thay vì hành động ngay.
+- **Lý do cụ thể**: liệt kê đúng những chỉ báo nào đang ủng hộ nhãn tín hiệu,
+  để tự kiểm tra lại thay vì tin mù quáng vào 1 con số.
 
 ### Xem chi tiết từng chỉ báo (không chỉ điểm gộp)
 

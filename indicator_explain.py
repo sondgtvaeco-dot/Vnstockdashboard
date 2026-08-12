@@ -6,6 +6,86 @@ và VN30F (phái sinh), tránh lặp code giữa 2 trang.
 
 import pandas as pd
 
+import scorer
+
+
+def build_signal(row: pd.Series, cfg) -> dict:
+    """
+    Tổng hợp zone (điểm gộp) + từng chỉ báo riêng lẻ thành 1 tín hiệu MUA/BÁN/GIỮ
+    kèm mức độ đồng thuận và lý do cụ thể - trả lời thẳng câu hỏi "tín hiệu này
+    có đáng tin không, vì sao" thay vì chỉ đưa 1 con số điểm.
+    """
+    zone = row.get("zone")
+    if zone == scorer.ZONE_GOOD:
+        base_label = "MUA"
+    elif zone == scorer.ZONE_EXPENSIVE:
+        base_label = "BÁN / CHỐT LỜI"
+    else:
+        base_label = "GIỮ / CHỜ"
+
+    bull, bear = [], []
+
+    if pd.notna(row.get("rsi")):
+        if row["rsi"] <= cfg.RSI_OVERSOLD:
+            bull.append("RSI quá bán")
+        elif row["rsi"] >= cfg.RSI_OVERBOUGHT:
+            bear.append("RSI quá mua")
+
+    if pd.notna(row.get("mfi")):
+        if row["mfi"] <= cfg.MFI_OVERSOLD:
+            bull.append("MFI (dòng tiền) quá bán")
+        elif row["mfi"] >= cfg.MFI_OVERBOUGHT:
+            bear.append("MFI (dòng tiền) quá mua")
+
+    if pd.notna(row.get("macd")) and pd.notna(row.get("macd_signal")):
+        if row["macd"] > row["macd_signal"]:
+            bull.append("MACD trên đường tín hiệu")
+        else:
+            bear.append("MACD dưới đường tín hiệu")
+
+    if pd.notna(row.get("bb_percent_b")):
+        if row["bb_percent_b"] <= 0.1:
+            bull.append("Sát dải Bollinger dưới")
+        elif row["bb_percent_b"] >= 0.9:
+            bear.append("Sát dải Bollinger trên")
+
+    if row.get("obv_trend") == "Dòng tiền vào (tăng)":
+        bull.append("Dòng tiền vào (OBV tăng)")
+    elif row.get("obv_trend") == "Dòng tiền ra (giảm)":
+        bear.append("Dòng tiền ra (OBV giảm)")
+
+    if (pd.notna(row.get("support")) and pd.notna(row.get("resistance"))
+            and pd.notna(row.get("last_close"))):
+        rng = row["resistance"] - row["support"]
+        if rng > 0:
+            pos = (row["last_close"] - row["support"]) / rng
+            if pos <= 0.2:
+                bull.append("Giá gần vùng hỗ trợ")
+            elif pos >= 0.8:
+                bear.append("Giá gần vùng kháng cự")
+
+    if base_label == "MUA":
+        if len(bull) >= 3 and len(bull) > len(bear):
+            confidence = "Đồng thuận cao"
+        elif len(bull) > len(bear):
+            confidence = "Đồng thuận trung bình"
+        else:
+            confidence = "Tín hiệu mâu thuẫn - nên chờ xác nhận thêm trước khi mua"
+        reasons = bull if bull else bear
+    elif base_label.startswith("BÁN"):
+        if len(bear) >= 3 and len(bear) > len(bull):
+            confidence = "Đồng thuận cao"
+        elif len(bear) > len(bull):
+            confidence = "Đồng thuận trung bình"
+        else:
+            confidence = "Tín hiệu mâu thuẫn - nên chờ xác nhận thêm trước khi bán"
+        reasons = bear if bear else bull
+    else:
+        confidence = f"{len(bull)} chỉ báo nghiêng tăng, {len(bear)} chỉ báo nghiêng giảm - chưa đủ rõ ràng"
+        reasons = bull + bear
+
+    return {"label": base_label, "confidence": confidence, "reasons": reasons}
+
 
 def build_indicator_table(row: pd.Series, cfg) -> list:
     """
