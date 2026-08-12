@@ -72,6 +72,23 @@ SCHEMA_STATEMENTS = [
         zone_at_time TEXT
     )
     """,
+    """
+    CREATE TABLE IF NOT EXISTS futures_scores_history (
+        id SERIAL PRIMARY KEY,
+        run_time TIMESTAMPTZ NOT NULL,
+        symbol TEXT NOT NULL,
+        technical_score DOUBLE PRECISION,
+        basis_score DOUBLE PRECISION,
+        combined_score DOUBLE PRECISION,
+        zone TEXT,
+        last_close DOUBLE PRECISION,
+        rsi DOUBLE PRECISION,
+        basis DOUBLE PRECISION,
+        basis_pct DOUBLE PRECISION,
+        note TEXT
+    )
+    """,
+    "CREATE INDEX IF NOT EXISTS idx_futures_scores_symbol_time ON futures_scores_history(symbol, run_time)",
 ]
 
 
@@ -201,3 +218,78 @@ def get_trades(symbol: str = None) -> pd.DataFrame:
         query = "SELECT * FROM trade_journal WHERE symbol = :symbol ORDER BY created_at DESC"
         return pd.read_sql(text(query), engine, params={"symbol": symbol})
     return pd.read_sql(text("SELECT * FROM trade_journal ORDER BY created_at DESC"), engine)
+
+
+# ───────────────────────── Cấu hình & dữ liệu phái sinh (VN30F) ─────────────────────────
+
+def get_futures_watchlist() -> list:
+    val = _get_config_value("futures_watchlist")
+    return json.loads(val) if val else list(cfg.FUTURES_WATCHLIST)
+
+
+def set_futures_watchlist(symbols: list) -> None:
+    _set_config_value("futures_watchlist", json.dumps(symbols, ensure_ascii=False))
+
+
+def get_futures_thresholds() -> dict:
+    val = _get_config_value("futures_thresholds")
+    if val:
+        return json.loads(val)
+    return {"cheap": cfg.FUTURES_ZONE_CHEAP_THRESHOLD, "expensive": cfg.FUTURES_ZONE_EXPENSIVE_THRESHOLD}
+
+
+def set_futures_thresholds(cheap: float, expensive: float) -> None:
+    _set_config_value("futures_thresholds", json.dumps({"cheap": cheap, "expensive": expensive}))
+
+
+def get_futures_weights() -> dict:
+    val = _get_config_value("futures_weights")
+    if val:
+        return json.loads(val)
+    return {"technical": cfg.FUTURES_TECHNICAL_WEIGHT, "basis": cfg.FUTURES_BASIS_WEIGHT}
+
+
+def set_futures_weights(technical: float, basis: float) -> None:
+    _set_config_value("futures_weights", json.dumps({"technical": technical, "basis": basis}))
+
+
+def insert_futures_scores(rows: list, run_time: datetime = None) -> None:
+    run_time = run_time or datetime.now(timezone.utc)
+    engine = get_engine()
+    with engine.begin() as conn:
+        for r in rows:
+            conn.execute(text("""
+                INSERT INTO futures_scores_history
+                (run_time, symbol, technical_score, basis_score, combined_score,
+                 zone, last_close, rsi, basis, basis_pct, note)
+                VALUES (:run_time, :symbol, :technical_score, :basis_score, :combined_score,
+                        :zone, :last_close, :rsi, :basis, :basis_pct, :note)
+            """), {
+                "run_time": run_time,
+                "symbol": r.get("symbol"),
+                "technical_score": r.get("technical_score"),
+                "basis_score": r.get("basis_score"),
+                "combined_score": r.get("combined_score"),
+                "zone": r.get("zone"),
+                "last_close": r.get("last_close"),
+                "rsi": r.get("rsi"),
+                "basis": r.get("basis"),
+                "basis_pct": r.get("basis_pct"),
+                "note": r.get("note"),
+            })
+
+
+def get_latest_futures_scores() -> pd.DataFrame:
+    query = """
+        SELECT s.* FROM futures_scores_history s
+        INNER JOIN (
+            SELECT symbol, MAX(run_time) AS max_time FROM futures_scores_history GROUP BY symbol
+        ) latest ON s.symbol = latest.symbol AND s.run_time = latest.max_time
+        ORDER BY s.combined_score DESC NULLS LAST
+    """
+    return pd.read_sql(text(query), get_engine())
+
+
+def get_futures_score_history(symbol: str) -> pd.DataFrame:
+    query = "SELECT * FROM futures_scores_history WHERE symbol = :symbol ORDER BY run_time ASC"
+    return pd.read_sql(text(query), get_engine(), params={"symbol": symbol})

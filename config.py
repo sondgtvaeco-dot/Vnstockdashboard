@@ -25,6 +25,20 @@ WATCHLIST = ["VNM", "FPT", "VCB", "ACB", "HPG"]
 FUTURES_SYMBOL = "VN30F1M"
 MARKET_INDEX = "VNINDEX"
 
+# ── Cấu hình mặc định cho phái sinh VN30F ──
+# Danh sách hợp đồng theo dõi. VN30F1M = kỳ hạn gần nhất (thanh khoản cao nhất,
+# thường được theo dõi nhiều nhất). Có thể thêm VN30F2M/F3M/F4M qua trang Cấu hình.
+FUTURES_WATCHLIST = ["VN30F1M"]
+# Chỉ số cơ sở dùng để tính basis (chênh lệch giá phái sinh - chỉ số cơ sở).
+# VN30F định giá theo chỉ số VN30, KHÔNG phải VNINDEX.
+FUTURES_UNDERLYING_INDEX = "VN30"
+
+FUTURES_TECHNICAL_WEIGHT = 0.5
+FUTURES_BASIS_WEIGHT = 0.5
+
+FUTURES_ZONE_CHEAP_THRESHOLD = 65
+FUTURES_ZONE_EXPENSIVE_THRESHOLD = 35
+
 LOOKBACK_DAYS = 500
 RATIO_PERIOD = "year"
 
