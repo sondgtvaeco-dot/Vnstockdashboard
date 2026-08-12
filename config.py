@@ -39,6 +39,12 @@ FUTURES_BASIS_WEIGHT = 0.5
 FUTURES_ZONE_CHEAP_THRESHOLD = 65
 FUTURES_ZONE_EXPENSIVE_THRESHOLD = 35
 
+# Số phiên NẾN NGÀY dùng làm bộ lọc xu hướng dài hạn (xem daily_trend_sma trong
+# indicators.py). Mặc định 100 vì gói vnstock Community (miễn phí) giới hạn tối
+# đa 100 bản ghi/lượt gọi bất kể lookback_days yêu cầu bao nhiêu - 200 sẽ luôn
+# trả về None với gói này. Nếu đã nâng cấp gói trả phí, có thể tăng lại lên 200.
+TREND_SMA_PERIOD = 100
+
 LOOKBACK_DAYS = 500
 
 # ── Khung nến (interval) ──

@@ -60,13 +60,13 @@ def analyze_symbol_live(fetcher: VNDataFetcher, symbol: str, weights: dict, thre
     if cfg.EQUITY_INTERVAL != "1D":
         try:
             daily_df = fetcher.get_equity_ohlcv(symbol, lookback_days=cfg.LOOKBACK_DAYS, interval="1D")
-            last_row["sma_200"] = indicators.daily_trend_sma(daily_df, period=200)
+            last_row["sma_200"] = indicators.daily_trend_sma(daily_df, period=cfg.TREND_SMA_PERIOD)
             if last_row["sma_200"] is None:
-                print(f"  [{symbol}] SMA200 = None: chỉ có {len(daily_df)} phiên nến ngày "
-                      f"(cần >=200) - có thể cổ phiếu mới lên sàn hoặc nguồn dữ liệu giới hạn lịch sử.")
+                print(f"  [{symbol}] SMA{cfg.TREND_SMA_PERIOD} = None: chỉ có {len(daily_df)} phiên nến ngày "
+                      f"(cần >={cfg.TREND_SMA_PERIOD}) - có thể cổ phiếu mới lên sàn hoặc nguồn dữ liệu giới hạn lịch sử.")
         except Exception as e:  # noqa: BLE001
             last_row["sma_200"] = None
-            print(f"  [{symbol}] Lỗi khi lấy nến ngày cho SMA200: {e}")
+            print(f"  [{symbol}] Lỗi khi lấy nến ngày cho SMA{cfg.TREND_SMA_PERIOD}: {e}")
     tech_score = indicators.technical_score(last_row, cfg)
 
     try:
