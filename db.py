@@ -123,6 +123,10 @@ MIGRATION_STATEMENTS = [
         ADD COLUMN IF NOT EXISTS mfi DOUBLE PRECISION,
         ADD COLUMN IF NOT EXISTS obv_trend TEXT
     """,
+    """
+    ALTER TABLE trade_journal
+        ADD COLUMN IF NOT EXISTS asset_type TEXT DEFAULT 'Cổ phiếu'
+    """,
 ]
 
 
@@ -259,17 +263,17 @@ def get_score_trend(symbol: str, limit: int = 20) -> list:
 # ───────────────────────────────── Nhật ký giao dịch ─────────────────────────────────
 
 def add_trade(symbol: str, action: str, trade_date: str, price: float, quantity: float,
-              note: str, combined_score_at_time, zone_at_time) -> None:
+              note: str, combined_score_at_time, zone_at_time, asset_type: str = "Cổ phiếu") -> None:
     engine = get_engine()
     with engine.begin() as conn:
         conn.execute(text("""
             INSERT INTO trade_journal
-            (symbol, action, trade_date, price, quantity, note, combined_score_at_time, zone_at_time)
-            VALUES (:symbol, :action, :trade_date, :price, :quantity, :note, :score, :zone)
+            (symbol, action, trade_date, price, quantity, note, combined_score_at_time, zone_at_time, asset_type)
+            VALUES (:symbol, :action, :trade_date, :price, :quantity, :note, :score, :zone, :asset_type)
         """), {
             "symbol": symbol, "action": action, "trade_date": trade_date,
             "price": price, "quantity": quantity, "note": note,
-            "score": combined_score_at_time, "zone": zone_at_time,
+            "score": combined_score_at_time, "zone": zone_at_time, "asset_type": asset_type,
         })
 
 

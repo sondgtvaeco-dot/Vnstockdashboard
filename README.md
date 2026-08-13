@@ -116,7 +116,7 @@ cụ cá nhân, không phải hệ thống nhiều người dùng với phân qu
 | **Tổng quan** (`Home.py`) | Bảng tất cả mã theo dõi: đèn màu vùng giá, **cột Tín hiệu MUA/BÁN/GIỮ**, **sparkline xu hướng điểm số 20 lượt quét gần nhất** ngay trong bảng, sort theo điểm tổng hợp |
 | **Chi tiết mã** | Chọn 1 mã, xem **tín hiệu MUA/BÁN/GIỮ kèm mức độ đồng thuận + lý do cụ thể**, bảng chi tiết từng chỉ báo, biểu đồ lịch sử điểm số/giá/MACD/MFI |
 | **Cấu hình** | Ô **thêm/xoá nhanh 1 mã**, cộng với khung chỉnh hàng loạt watchlist/ngưỡng/trọng số kỹ thuật/định giá — lưu vào Postgres, áp dụng từ lượt quét tiếp theo, không cần sửa code |
-| **Nhật ký** | Ghi lại quyết định mua/bán thật (mã, giá, khối lượng, ghi chú) kèm điểm số hệ thống tại thời điểm đó, để tự đối chiếu hiệu quả tín hiệu về sau |
+| **Nhật ký** | Ghi lại quyết định mua/bán thật cho **cả cổ phiếu lẫn phái sinh** (chọn loại tài sản đầu trang), kèm điểm số hệ thống tương ứng tại thời điểm đó, để tự đối chiếu hiệu quả tín hiệu về sau |
 
 ## Cách đọc điểm số
 
