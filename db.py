@@ -89,6 +89,26 @@ SCHEMA_STATEMENTS = [
     )
     """,
     "CREATE INDEX IF NOT EXISTS idx_futures_scores_symbol_time ON futures_scores_history(symbol, run_time)",
+    """
+    CREATE TABLE IF NOT EXISTS futures_positions (
+        id SERIAL PRIMARY KEY,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        symbol TEXT NOT NULL,
+        direction TEXT NOT NULL,
+        entry_price DOUBLE PRECISION NOT NULL,
+        quantity DOUBLE PRECISION NOT NULL,
+        entry_date DATE NOT NULL,
+        entry_score DOUBLE PRECISION,
+        entry_zone TEXT,
+        note TEXT,
+        status TEXT NOT NULL DEFAULT 'Mở',
+        exit_price DOUBLE PRECISION,
+        exit_date DATE,
+        closed_at TIMESTAMPTZ
+    )
+    """,
+    "CREATE INDEX IF NOT EXISTS idx_futures_positions_symbol ON futures_positions(symbol)",
+    "CREATE INDEX IF NOT EXISTS idx_futures_positions_status ON futures_positions(status)",
 ]
 
 # Các cột chi tiết chỉ báo được thêm SAU khi bảng đã tồn tại ở một số môi trường
@@ -383,3 +403,42 @@ def get_futures_score_trend(symbol: str, limit: int = 20) -> list:
     """
     df = pd.read_sql(text(query), get_engine(), params={"symbol": symbol, "limit": limit})
     return df["combined_score"].iloc[::-1].tolist()
+
+
+# ───────────────────────────────── Vị thế phái sinh (mở/đóng lệnh) ─────────────────────────────────
+
+def open_futures_position(symbol: str, direction: str, entry_price: float, quantity: float,
+                           entry_date: str, note: str, entry_score, entry_zone) -> None:
+    """Mở 1 lệnh phái sinh mới - trạng thái mặc định 'Mở', chưa có giá đóng."""
+    engine = get_engine()
+    with engine.begin() as conn:
+        conn.execute(text("""
+            INSERT INTO futures_positions
+            (symbol, direction, entry_price, quantity, entry_date, note, entry_score, entry_zone, status)
+            VALUES (:symbol, :direction, :entry_price, :quantity, :entry_date, :note, :score, :zone, 'Mở')
+        """), {
+            "symbol": symbol, "direction": direction, "entry_price": entry_price,
+            "quantity": quantity, "entry_date": entry_date, "note": note,
+            "score": entry_score, "zone": entry_zone,
+        })
+
+
+def close_futures_position(position_id: int, exit_price: float, exit_date: str) -> None:
+    """Đóng 1 lệnh đang mở - cập nhật giá đóng, ngày đóng, chuyển trạng thái 'Đã đóng'."""
+    engine = get_engine()
+    with engine.begin() as conn:
+        conn.execute(text("""
+            UPDATE futures_positions
+            SET exit_price = :exit_price, exit_date = :exit_date,
+                status = 'Đã đóng', closed_at = now()
+            WHERE id = :id
+        """), {"exit_price": exit_price, "exit_date": exit_date, "id": position_id})
+
+
+def get_futures_positions(status: str = None) -> pd.DataFrame:
+    """status: None (tất cả), 'Mở', hoặc 'Đã đóng'."""
+    engine = get_engine()
+    if status:
+        query = "SELECT * FROM futures_positions WHERE status = :status ORDER BY created_at DESC"
+        return pd.read_sql(text(query), engine, params={"status": status})
+    return pd.read_sql(text("SELECT * FROM futures_positions ORDER BY created_at DESC"), engine)

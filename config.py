@@ -39,6 +39,11 @@ FUTURES_BASIS_WEIGHT = 0.5
 FUTURES_ZONE_CHEAP_THRESHOLD = 65
 FUTURES_ZONE_EXPENSIVE_THRESHOLD = 35
 
+# Hệ số nhân hợp đồng VN30F: 1 điểm chỉ số = 100.000 VNĐ/hợp đồng (chuẩn phổ
+# biến của VN30F trên HNX tại thời điểm viết code này). Kiểm tra lại quy định
+# hiện hành trước khi dùng để tính lãi/lỗ thật - có thể thay đổi theo thời gian.
+FUTURES_CONTRACT_MULTIPLIER = 100_000
+
 # Số phiên NẾN NGÀY dùng làm bộ lọc xu hướng dài hạn (xem daily_trend_sma trong
 # indicators.py). Mặc định 100 vì gói vnstock Community (miễn phí) giới hạn tối
 # đa 100 bản ghi/lượt gọi bất kể lookback_days yêu cầu bao nhiêu - 200 sẽ luôn

@@ -208,6 +208,33 @@ bạn vẫn thấy được nếu có phân kỳ đang hình thành.
 Cách phát hiện dùng so sánh 2 đỉnh/đáy cục bộ gần nhất (không thay thế phân
 tích biểu đồ thủ công), nên chỉ nên dùng làm 1 góc nhìn tham khảo thêm.
 
+### Theo dõi lãi/lỗ (P&L)
+
+Trang **Nhật ký** giờ tính lãi/lỗ thật, không chỉ ghi chép đơn thuần:
+
+**Cổ phiếu** — tự động tính theo phương pháp **giá vốn bình quân** (average
+cost) từ toàn bộ lịch sử Mua/Bán đã ghi, không cần "mở/đóng lệnh" thủ công
+(vì cổ phiếu VN chỉ có chiều mua, không bán khống được):
+- Số lượng đang giữ + giá vốn bình quân, tự cộng dồn qua mỗi lần mua
+- Lãi/lỗ **đã chốt** - tính ngay khi ghi 1 lệnh Bán, dựa trên giá vốn BQ tại
+  thời điểm đó
+- Lãi/lỗ **chưa chốt** - dựa trên giá đóng cửa gần nhất từ hệ thống
+
+**Phái sinh** — có bảng riêng `futures_positions`, quản lý theo từng lệnh
+Long/Short (khác cổ phiếu, phái sinh có cả 2 chiều):
+- Tab **"Mở lệnh mới"** - chọn Long hoặc Short, giá vào, số hợp đồng
+- Tab **"Đóng lệnh"** - chọn 1 lệnh đang mở, nhập giá đóng → tự tính lãi/lỗ
+- Bảng "Lệnh đang mở" hiện lãi/lỗ tạm tính theo giá hiện tại; bảng "Lệnh đã
+  đóng" hiện lãi/lỗ đã chốt
+- Công thức: Long = (giá đóng - giá vào) × số hợp đồng × hệ số nhân; Short =
+  ngược lại. Hệ số nhân mặc định 100.000đ/điểm/hợp đồng (`FUTURES_CONTRACT_MULTIPLIER`
+  trong `config.py`) - **kiểm tra lại quy định hiện hành trước khi dùng cho
+  giao dịch thật**, con số này có thể thay đổi theo thời gian.
+
+Nhật ký phái sinh ghi từ trước khi có tính năng này (dạng Mua/Bán đơn thuần,
+không có Long/Short) vẫn được giữ lại, hiển thị riêng trong 1 khung có thể mở
+rộng ở cuối trang - không tính được lãi/lỗ vì thiếu thông tin hướng lệnh.
+
 ## Cấu trúc project
 
 | File/thư mục | Chức năng |
@@ -219,6 +246,7 @@ tích biểu đồ thủ công), nên chỉ nên dùng làm 1 góc nhìn tham kh
 | `valuation.py` | Chấm điểm định giá cổ phiếu theo phân vị P/E, P/B lịch sử |
 | `futures_analysis.py` | Chấm điểm phái sinh theo phân vị basis lịch sử |
 | `indicator_explain.py` | Diễn giải chỉ báo chi tiết (MACD, hỗ trợ/kháng cự, MFI, OBV) thành bảng dễ đọc |
+| `pnl.py` | Tính lãi/lỗ: giá vốn bình quân (cổ phiếu), Long/Short (phái sinh) |
 | `scorer.py` | Kết hợp điểm kỹ thuật + định giá/basis → nhãn vùng giá (dùng chung cổ phiếu & phái sinh) |
 | `main.py` | Collector cổ phiếu: quét watchlist, ghi lịch sử vào Postgres |
 | `main_futures.py` | Collector phái sinh VN30F: quét watchlist, ghi lịch sử vào Postgres |
