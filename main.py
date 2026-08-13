@@ -17,6 +17,7 @@ Cách chạy:
 import argparse
 import os
 import sys
+import time
 
 import pandas as pd
 
@@ -119,12 +120,21 @@ def main():
             sys.exit(1)
 
         rows = []
-        for symbol in watchlist:
+        for i, symbol in enumerate(watchlist):
             print(f"Đang xử lý {symbol}...")
             try:
                 rows.append(analyze_symbol_live(fetcher, symbol, weights, thresholds))
+            except SystemExit as e:
+                # vnstock (gói Community) tự gọi sys.exit() khi chạm rate-limit thay vì
+                # raise Exception thông thường - PHẢI bắt riêng SystemExit, nếu không
+                # cả lượt quét sẽ sập, mất dữ liệu của mọi mã còn lại trong watchlist.
+                print(f"  [{symbol}] Bị chặn bởi rate-limit vnstock (SystemExit code={e.code}) - "
+                      f"bỏ qua mã này, tiếp tục các mã còn lại.", file=sys.stderr)
             except Exception as e:  # noqa: BLE001
                 print(f"  Lỗi khi xử lý {symbol}: {e}", file=sys.stderr)
+
+            if i < len(watchlist) - 1:
+                time.sleep(cfg.API_CALL_DELAY_SECONDS)
 
     report = scorer.build_report(rows)
     if report.empty:

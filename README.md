@@ -262,6 +262,16 @@ chồng lấp) nếu việc này xảy ra, nhưng nên **tăng dần watchlist t
 (vd 10 mã → 30 mã → cả danh mục) thay vì bật hết cùng lúc, để phát hiện sớm
 nếu chạm giới hạn.
 
+**Đã xác nhận qua sự cố thực tế:** khi chạm rate-limit 60 request/phút, thư
+viện vnstock (gói Community) **tự gọi `sys.exit()`** thay vì raise một
+`Exception` bình thường - nếu không bắt riêng `SystemExit`, cả lượt quét sẽ
+sập ngay tại mã đang xử lý, mất dữ liệu của mọi mã còn lại trong watchlist.
+`main.py`/`main_futures.py` đã xử lý việc này: bắt riêng `SystemExit` để bỏ
+qua đúng mã bị chặn và tiếp tục các mã còn lại, đồng thời chờ
+`API_CALL_DELAY_SECONDS` (mặc định 2 giây) giữa mỗi mã để giãn tải, giảm khả
+năng chạm giới hạn ngay từ đầu. Đây là giảm thiểu rủi ro, không phải đảm bảo
+tuyệt đối - watchlist càng lớn, khả năng chạm giới hạn vẫn càng cao.
+
 ## Những điều cần lưu ý
 
 - **Không phải khuyến nghị đầu tư.** Điểm số là heuristic tự định nghĩa

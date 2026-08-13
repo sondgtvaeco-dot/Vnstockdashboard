@@ -59,6 +59,11 @@ FUTURES_INTRADAY_LOOKBACK_DAYS = 15  # ~15 ngày x ~75 nến/phiên (5 phút) = 
 
 RATIO_PERIOD = "year"
 
+# Độ trễ (giây) giữa mỗi mã khi quét - vnstock gói Community giới hạn 60
+# request/phút; mỗi mã tốn ~3 request (giá + báo cáo tài chính + SMA dài hạn),
+# nên giãn cách ra để không dồn cụm chạm giới hạn khi watchlist lớn dần.
+API_CALL_DELAY_SECONDS = 2
+
 RSI_PERIOD = 14
 RSI_OVERSOLD = 30
 RSI_OVERBOUGHT = 70
