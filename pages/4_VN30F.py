@@ -98,7 +98,7 @@ else:
 
     with sig_col1:
         st.markdown("**Tín hiệu Mean-Reversion** _(mua khi quá bán, bán khi quá mua)_")
-        signal = indicator_explain.build_signal(latest, cfg)
+        signal = indicator_explain.build_signal(latest, cfg, hist=hist)
         signal_text = f"**{signal['label']}** — {signal['confidence']}"
         if signal["reasons"]:
             signal_text += "\n\nLý do: " + ", ".join(signal["reasons"])
@@ -127,6 +127,16 @@ else:
         "đây là điều bình thường, không phải lỗi. Chọn trường phái phù hợp với phong cách giao dịch "
         "của bạn, không phải khuyến nghị đầu tư."
     )
+
+    divergence = indicator_explain.check_rsi_macd_divergence(hist)
+    if divergence["bull"] or divergence["bear"]:
+        st.markdown("**Phân kỳ RSI/MACD phát hiện được**")
+        for reason in divergence["bull"]:
+            st.info(f"📈 {reason} — cảnh báo đà giảm đang yếu đi, khả năng đảo chiều tăng")
+        for reason in divergence["bear"]:
+            st.info(f"📉 {reason} — cảnh báo đà tăng đang yếu đi, khả năng đảo chiều giảm")
+    else:
+        st.caption("Chưa phát hiện phân kỳ RSI/MACD trong 20 lượt quét gần nhất.")
 
     st.markdown("**Chi tiết chỉ báo (lượt quét gần nhất)**")
     indicator_rows = indicator_explain.build_indicator_table(latest, cfg)

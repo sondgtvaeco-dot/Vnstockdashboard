@@ -188,6 +188,26 @@ thống. Chọn trường phái phù hợp với phong cách giao dịch của b
 phù hợp giao dịch dao động trong biên độ; trend-following phù hợp bắt xu hướng
 mạnh, chấp nhận vào trễ hơn để đổi lấy xác suất đúng cao hơn).
 
+### Phân kỳ RSI/MACD
+
+Trang **Chi tiết mã** và **VN30F** giờ kiểm tra thêm phân kỳ (divergence) giữa
+giá và RSI/MACD trong 20 lượt quét gần nhất - một tín hiệu cảnh báo đảo chiều
+sớm mà nhiều trường phái phân tích kỹ thuật coi trọng:
+
+- **Phân kỳ tăng**: giá tạo đáy mới thấp hơn nhưng RSI/MACD tạo đáy cao hơn →
+  đà giảm đang yếu đi, cảnh báo khả năng đảo chiều tăng.
+- **Phân kỳ giảm**: giá tạo đỉnh mới cao hơn nhưng RSI/MACD tạo đỉnh thấp hơn →
+  đà tăng đang yếu đi, cảnh báo khả năng đảo chiều giảm.
+
+Phân kỳ được tính trọng số **gấp đôi** một chỉ báo đơn lẻ khi tổng hợp cả 2
+tín hiệu Mean-Reversion và Trend-Following (vì đây là tín hiệu đảo chiều
+tương đối mạnh), đồng thời hiển thị riêng thành khối cảnh báo độc lập ngay
+dưới 2 khối tín hiệu chính - kể cả khi chưa đủ mạnh để đổi nhãn MUA/BÁN/GIỮ,
+bạn vẫn thấy được nếu có phân kỳ đang hình thành.
+
+Cách phát hiện dùng so sánh 2 đỉnh/đáy cục bộ gần nhất (không thay thế phân
+tích biểu đồ thủ công), nên chỉ nên dùng làm 1 góc nhìn tham khảo thêm.
+
 ## Cấu trúc project
 
 | File/thư mục | Chức năng |
