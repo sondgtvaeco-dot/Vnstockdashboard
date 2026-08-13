@@ -8,6 +8,7 @@ import streamlit as st
 
 import db
 import indicator_explain
+import vn_time
 import config as cfg
 from auth import require_login
 
@@ -50,7 +51,7 @@ if df.empty:
 else:
     df_display = df.copy()
     df_display.insert(0, "trạng thái", df_display["zone"].map(ZONE_ICON).fillna("⚪"))
-    df_display["run_time"] = df_display["run_time"].astype(str)
+    df_display["run_time"] = vn_time.to_vn_time_str(df_display["run_time"])
     df_display["tín hiệu"] = df_display.apply(
         lambda row: indicator_explain.build_signal(row, cfg)["label"], axis=1
     )
@@ -65,7 +66,7 @@ else:
             "symbol": "Hợp đồng", "tín hiệu": "Tín hiệu", "combined_score": "Điểm tổng hợp", "zone": "Vùng giá",
             "technical_score": "Điểm kỹ thuật", "basis_score": "Điểm basis",
             "last_close": "Giá", "basis": "Basis", "basis_pct": "Basis (%)",
-            "rsi": "RSI", "mfi": "MFI", "run_time": "Lần quét gần nhất (UTC)",
+            "rsi": "RSI", "mfi": "MFI", "run_time": "Lần quét gần nhất (giờ VN)",
         }),
         column_config={
             "xu hướng gần đây": st.column_config.LineChartColumn(
@@ -88,7 +89,7 @@ if hist.empty:
     st.info(f"Chưa có dữ liệu lịch sử cho {symbol}.")
 else:
     hist = hist.copy()
-    hist["run_time"] = pd.to_datetime(hist["run_time"])
+    hist["run_time"] = vn_time.to_vn_time(hist["run_time"])
     hist = hist.sort_values("run_time")
 
     latest = hist.iloc[-1]

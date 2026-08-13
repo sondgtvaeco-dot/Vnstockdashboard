@@ -8,6 +8,7 @@ import streamlit as st
 
 import db
 import indicator_explain
+import vn_time
 import config as cfg
 from auth import require_login
 
@@ -29,7 +30,7 @@ if hist.empty:
     st.stop()
 
 hist = hist.copy()
-hist["run_time"] = pd.to_datetime(hist["run_time"])
+hist["run_time"] = vn_time.to_vn_time(hist["run_time"])
 hist = hist.sort_values("run_time")
 
 latest = hist.iloc[-1]

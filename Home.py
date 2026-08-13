@@ -7,6 +7,7 @@ import streamlit as st
 
 import db
 import indicator_explain
+import vn_time
 import config as cfg
 from auth import require_login
 
@@ -39,7 +40,7 @@ if df.empty:
 else:
     df = df.copy()
     df.insert(0, "trạng thái", df["zone"].map(ZONE_ICON).fillna("⚪"))
-    df["run_time"] = df["run_time"].astype(str)
+    df["run_time"] = vn_time.to_vn_time_str(df["run_time"])
 
     # Tín hiệu MUA/BÁN/GIỮ ngay trong bảng tổng quan (trước đây phải bấm vào từng mã mới thấy)
     df["tín hiệu"] = df.apply(lambda row: indicator_explain.build_signal(row, cfg)["label"], axis=1)
@@ -56,7 +57,7 @@ else:
             "symbol": "Mã", "tín hiệu": "Tín hiệu", "combined_score": "Điểm tổng hợp", "zone": "Vùng giá",
             "technical_score": "Điểm kỹ thuật", "valuation_score": "Điểm định giá",
             "last_close": "Giá đóng cửa", "rsi": "RSI", "mfi": "MFI", "current_pe": "P/E",
-            "current_pb": "P/B", "run_time": "Lần quét gần nhất (UTC)",
+            "current_pb": "P/B", "run_time": "Lần quét gần nhất (giờ VN)",
         }),
         column_config={
             "xu hướng gần đây": st.column_config.LineChartColumn(

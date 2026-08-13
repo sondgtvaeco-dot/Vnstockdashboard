@@ -5,6 +5,7 @@ on:
     # Mỗi 5 phút, 02:00-08:00 UTC = 09:00-15:00 giờ VN, Thứ 2 - Thứ 6
     # Lưu ý: GitHub Actions free tier không đảm bảo chạy đúng giờ tuyệt đối
     # (có thể trễ vài phút so với lịch cron, đặc biệt vào giờ cao điểm).
+    # (Cập nhật lại workflow để GitHub đăng ký lại lịch cron nếu bị treo)
     - cron: "*/5 2-8 * * 1-5"
   workflow_dispatch: {}  # cho phép bấm chạy tay từ tab Actions trên GitHub
 
